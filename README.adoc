@@ -27,7 +27,7 @@ include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/
 [[scratch]]
 == Starting with Spring Initializr
 
-You can use this https://start.spring.io/#!type=maven-project&groupId=com.example&artifactId=accessing-data-rest&name=accessing-data-rest&description=Demo%20project%20for%20Spring%20Boot&packageName=com.example.accessing-data-rest&dependencies=data-rest,data-jpa,h2[pre-initialized project] and click Generate to download a ZIP file. This project is configured to fit the examples in this tutorial.
+You can use this https://start.spring.io/#!type=gradle-project&jvmVersion=17&packaging=jar&groupId=com.example&artifactId=accessing-data-rest&packageName=com.example.accessingdatarest&dependencies=data-rest,data-jpa,h2[pre-initialized project] and click Generate to download a ZIP file. This project is configured to fit the examples in this tutorial.
 
 To manually initialize the project:
 
@@ -133,8 +133,11 @@ $ curl http://localhost:8080
 {
   "_links" : {
     "people" : {
-      "href" : "http://localhost:8080/people{?page,size,sort}",
+      "href" : "http://localhost:8080/people{?page,size,sort*}",
       "templated" : true
+    },
+    "profile" : {
+      "href" : "http://localhost:8080/profile"
     }
   }
 }
@@ -143,7 +146,7 @@ $ curl http://localhost:8080
 
 The preceding example provides a first glimpse of what this server has to offer. There is a `people` link located at `http://localhost:8080/people`. It has some options, such as `?page`, `?size`, and `?sort`.
 
-NOTE: Spring Data REST uses the http://stateless.co/hal_specification.html[HAL format] for
+NOTE: Spring Data REST uses the https://stateless.co/hal_specification.html[HAL format] for
 JSON output. It is flexible and offers a convenient way to supply links adjacent to the
 data that is served.
 
@@ -155,22 +158,24 @@ The following example shows how to see the people records (none at present):
 $ curl http://localhost:8080/people
 {
   "_embedded" : {
-    "people" : []
+    "people" : [ ]
   },
   "_links" : {
     "self" : {
-      "href" : "http://localhost:8080/people{?page,size,sort}",
-      "templated" : true
+      "href" : "http://localhost:8080/people?page=0&size=20"
+    },
+    "profile" : {
+      "href" : "http://localhost:8080/profile/people"
     },
     "search" : {
       "href" : "http://localhost:8080/people/search"
     }
   },
   "page" : {
+    "number" : 0,
     "size" : 20,
     "totalElements" : 0,
-    "totalPages" : 0,
-    "number" : 0
+    "totalPages" : 0
   }
 }
 ----
@@ -183,11 +188,24 @@ The following listing shows how to do so:
 [src,bash]
 ----
 $ curl -i -H "Content-Type:application/json" -d '{"firstName": "Frodo", "lastName": "Baggins"}' http://localhost:8080/people
-HTTP/1.1 201 Created
-Server: Apache-Coyote/1.1
+HTTP/1.1 201
 Location: http://localhost:8080/people/1
-Content-Length: 0
-Date: Wed, 26 Feb 2014 20:26:55 GMT
+Content-Type: application/vnd.hal+json
+Transfer-Encoding: chunked
+Date: Wed, 14 Jan 2026 13:40:30 GMT
+
+{
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8080/people/1"
+    },
+    "person" : {
+      "href" : "http://localhost:8080/people/1"
+    }
+  },
+  "firstName" : "Frodo",
+  "lastName" : "Baggins"
+}
 ----
 
 - `-i`: Ensures you can see the response message including the headers. The URI of the
@@ -195,7 +213,7 @@ newly created `Person` is shown.
 - `-H "Content-Type:application/json"`: Sets the content type so the application knows the
 payload contains a JSON object.
 - `-d '{"firstName": "Frodo", "lastName": "Baggins"}'`: Is the data being sent.
-- If you are on Windows, the command above will work on https://docs.microsoft.com/en-us/windows/wsl[WSL]. If you can't install WSL, you might need to replace the single quotes with double quotes and escape the existing double quotes, i.e. `-d "{\"firstName\": \"Frodo\", \"lastName\": \"Baggins\"}"`.
+- If you are on Windows, the command above will work on https://learn.microsoft.com/en-us/windows/wsl[WSL]. If you can't install WSL, you might need to replace the single quotes with double quotes and escape the existing double quotes, i.e. `-d "{\"firstName\": \"Frodo\", \"lastName\": \"Baggins\"}"`.
 ====
 
 NOTE: Notice how the response to the `POST` operation includes a `Location` header. This contains
@@ -212,31 +230,36 @@ You can query for all people, as the following example shows:
 ----
 $ curl http://localhost:8080/people
 {
+  "_embedded" : {
+    "people" : [ {
+      "_links" : {
+        "self" : {
+          "href" : "http://localhost:8080/people/1"
+        },
+        "person" : {
+          "href" : "http://localhost:8080/people/1"
+        }
+      },
+      "firstName" : "Frodo",
+      "lastName" : "Baggins"
+    } ]
+  },
   "_links" : {
     "self" : {
-      "href" : "http://localhost:8080/people{?page,size,sort}",
-      "templated" : true
+      "href" : "http://localhost:8080/people?page=0&size=20"
+    },
+    "profile" : {
+      "href" : "http://localhost:8080/profile/people"
     },
     "search" : {
       "href" : "http://localhost:8080/people/search"
     }
   },
-  "_embedded" : {
-    "people" : [ {
-      "firstName" : "Frodo",
-      "lastName" : "Baggins",
-      "_links" : {
-        "self" : {
-          "href" : "http://localhost:8080/people/1"
-        }
-      }
-    } ]
-  },
   "page" : {
+    "number" : 0,
     "size" : 20,
     "totalElements" : 1,
-    "totalPages" : 1,
-    "number" : 0
+    "totalPages" : 1
   }
 }
 ----
@@ -244,7 +267,7 @@ $ curl http://localhost:8080/people
 
 The `people` object contains a list that includes `Frodo`. Notice how it includes a
 `self` link. Spring Data REST also uses
-https://www.atteo.org/2011/12/12/Evo-Inflector.html[Evo Inflector] to pluralize the name of
+https://www.atteo.org/2011/12/12/EvoInflector.html[Evo Inflector] to pluralize the name of
 the entity for groupings.
 
 You can query directly for the individual record, as follows:
@@ -254,13 +277,16 @@ You can query directly for the individual record, as follows:
 ----
 $ curl http://localhost:8080/people/1
 {
-  "firstName" : "Frodo",
-  "lastName" : "Baggins",
   "_links" : {
     "self" : {
       "href" : "http://localhost:8080/people/1"
+    },
+    "person" : {
+      "href" : "http://localhost:8080/people/1"
     }
-  }
+  },
+  "firstName" : "Frodo",
+  "lastName" : "Baggins"
 }
 ----
 ====
@@ -281,6 +307,9 @@ $ curl http://localhost:8080/people/search
     "findByLastName" : {
       "href" : "http://localhost:8080/people/search/findByLastName{?name}",
       "templated" : true
+    },
+    "self" : {
+      "href" : "http://localhost:8080/people/search"
     }
   }
 }
@@ -298,15 +327,23 @@ The following example shows how to use the `findByLastName` query:
 $ curl http://localhost:8080/people/search/findByLastName?name=Baggins
 {
   "_embedded" : {
-    "persons" : [ {
-      "firstName" : "Frodo",
-      "lastName" : "Baggins",
+    "people" : [ {
       "_links" : {
         "self" : {
           "href" : "http://localhost:8080/people/1"
+        },
+        "person" : {
+          "href" : "http://localhost:8080/people/1"
         }
-      }
+      },
+      "firstName" : "Frodo",
+      "lastName" : "Baggins"
     } ]
+  },
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8080/people/search/findByLastName?name=Baggins"
+    }
   }
 }
 ----
@@ -324,19 +361,20 @@ existing records (respectively). The following example uses a `PUT` call:
 [src,bash]
 ----
 $ curl -X PUT -H "Content-Type:application/json" -d '{"firstName": "Bilbo", "lastName": "Baggins"}' http://localhost:8080/people/1
-$ curl http://localhost:8080/people/1
 {
-  "firstName" : "Bilbo",
-  "lastName" : "Baggins",
   "_links" : {
     "self" : {
       "href" : "http://localhost:8080/people/1"
+    },
+    "person" : {
+      "href" : "http://localhost:8080/people/1"
     }
-  }
+  },
+  "firstName" : "Bilbo",
+  "lastName" : "Baggins"
 }
 ----
 ====
-
 
 The following example uses a `PATCH` call:
 
@@ -344,15 +382,17 @@ The following example uses a `PATCH` call:
 [src,bash]
 ----
 $ curl -X PATCH -H "Content-Type:application/json" -d '{"firstName": "Bilbo Jr."}' http://localhost:8080/people/1
-$ curl http://localhost:8080/people/1
 {
-  "firstName" : "Bilbo Jr.",
-  "lastName" : "Baggins",
   "_links" : {
     "self" : {
       "href" : "http://localhost:8080/people/1"
+    },
+    "person" : {
+      "href" : "http://localhost:8080/people/1"
     }
-  }
+  },
+  "firstName" : "Bilbo Jr.",
+  "lastName" : "Baggins"
 }
 ----
 ====
@@ -368,20 +408,25 @@ You can also delete records, as the following example shows:
 $ curl -X DELETE http://localhost:8080/people/1
 $ curl http://localhost:8080/people
 {
+  "_embedded" : {
+    "people" : [ ]
+  },
   "_links" : {
     "self" : {
-      "href" : "http://localhost:8080/people{?page,size,sort}",
-      "templated" : true
+      "href" : "http://localhost:8080/people?page=0&size=20"
+    },
+    "profile" : {
+      "href" : "http://localhost:8080/profile/people"
     },
     "search" : {
       "href" : "http://localhost:8080/people/search"
     }
   },
   "page" : {
+    "number" : 0,
     "size" : 20,
     "totalElements" : 0,
-    "totalPages" : 0,
-    "number" : 0
+    "totalPages" : 0
   }
 }
 ----
