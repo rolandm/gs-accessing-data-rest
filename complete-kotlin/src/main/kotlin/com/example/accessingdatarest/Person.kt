@@ -6,11 +6,11 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 
 @Entity
-data class Person(
+class Person(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     var id: Long? = null,
-    
+
     var firstName: String? = null,
     var lastName: String? = null
 )
