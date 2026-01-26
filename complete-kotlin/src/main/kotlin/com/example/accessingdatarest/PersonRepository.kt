@@ -8,6 +8,6 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource
 @RepositoryRestResource(collectionResourceRel = "people", path = "people")
 interface PersonRepository : PagingAndSortingRepository<Person, Long>, CrudRepository<Person, Long> {
 
-    fun findByLastName(@Param("name") name: String): List<Person>
+  fun findByLastName(@Param("name") name: String): List<Person>
 
 }

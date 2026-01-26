@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class AccessingDataRestApplication
 
 fun main(args: Array<String>) {
-    runApplication<AccessingDataRestApplication>(*args)
+  runApplication<AccessingDataRestApplication>(*args)
 }

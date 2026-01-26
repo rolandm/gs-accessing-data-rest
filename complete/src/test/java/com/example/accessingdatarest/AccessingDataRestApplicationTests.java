@@ -17,106 +17,106 @@ import static java.util.Objects.requireNonNull;
 @AutoConfigureMockMvc
 public class AccessingDataRestApplicationTests {
 
-	@Autowired
-	private MockMvc mockMvc;
+  @Autowired
+  private MockMvc mockMvc;
 
-	@Autowired
-	private PersonRepository personRepository;
+  @Autowired
+  private PersonRepository personRepository;
 
-	@BeforeEach
-	public void deleteAllBeforeTests() throws Exception {
-		personRepository.deleteAll();
-	}
+  @BeforeEach
+  public void deleteAllBeforeTests() throws Exception {
+    personRepository.deleteAll();
+  }
 
-	@Test
-	public void shouldReturnRepositoryIndex() throws Exception {
+  @Test
+  public void shouldReturnRepositoryIndex() throws Exception {
 
-		mockMvc.perform(get("/")).andDo(print()).andExpect(status().isOk()).andExpect(
-				jsonPath("$._links.people").exists());
-	}
+    mockMvc.perform(get("/")).andDo(print()).andExpect(status().isOk()).andExpect(
+        jsonPath("$._links.people").exists());
+  }
 
-	@Test
-	public void shouldCreateEntity() throws Exception {
+  @Test
+  public void shouldCreateEntity() throws Exception {
 
-		mockMvc.perform(post("/people").content(
-				"{\"firstName\": \"Frodo\", \"lastName\":\"Baggins\"}")).andExpect(
-						status().isCreated()).andExpect(
-								header().string("Location", containsString("people/")));
-	}
+    mockMvc.perform(post("/people").content(
+        "{\"firstName\": \"Frodo\", \"lastName\":\"Baggins\"}")).andExpect(
+            status().isCreated()).andExpect(
+                header().string("Location", containsString("people/")));
+  }
 
-	@Test
-	public void shouldRetrieveEntity() throws Exception {
+  @Test
+  public void shouldRetrieveEntity() throws Exception {
 
-		MvcResult mvcResult = mockMvc.perform(post("/people").content(
-				"{\"firstName\": \"Frodo\", \"lastName\":\"Baggins\"}")).andExpect(
-						status().isCreated()).andReturn();
+    MvcResult mvcResult = mockMvc.perform(post("/people").content(
+        "{\"firstName\": \"Frodo\", \"lastName\":\"Baggins\"}")).andExpect(
+            status().isCreated()).andReturn();
 
-		String location = requireNonNull(mvcResult.getResponse().getHeader("Location"));
-		mockMvc.perform(get(location)).andExpect(status().isOk()).andExpect(
-				jsonPath("$.firstName").value("Frodo")).andExpect(
-						jsonPath("$.lastName").value("Baggins"));
-	}
+    String location = requireNonNull(mvcResult.getResponse().getHeader("Location"));
+    mockMvc.perform(get(location)).andExpect(status().isOk()).andExpect(
+        jsonPath("$.firstName").value("Frodo")).andExpect(
+            jsonPath("$.lastName").value("Baggins"));
+  }
 
-	@Test
-	public void shouldQueryEntity() throws Exception {
+  @Test
+  public void shouldQueryEntity() throws Exception {
 
-		mockMvc.perform(post("/people").content(
-				"{ \"firstName\": \"Frodo\", \"lastName\":\"Baggins\"}")).andExpect(
-						status().isCreated());
+    mockMvc.perform(post("/people").content(
+        "{ \"firstName\": \"Frodo\", \"lastName\":\"Baggins\"}")).andExpect(
+            status().isCreated());
 
-		mockMvc.perform(
-				get("/people/search/findByLastName?name={name}", "Baggins")).andExpect(
-						status().isOk()).andExpect(
-								jsonPath("$._embedded.people[0].firstName").value(
-										"Frodo"));
-	}
+    mockMvc.perform(
+        get("/people/search/findByLastName?name={name}", "Baggins")).andExpect(
+            status().isOk()).andExpect(
+                jsonPath("$._embedded.people[0].firstName").value(
+                    "Frodo"));
+  }
 
-	@Test
-	public void shouldUpdateEntity() throws Exception {
+  @Test
+  public void shouldUpdateEntity() throws Exception {
 
-		MvcResult mvcResult = mockMvc.perform(post("/people").content(
-				"{\"firstName\": \"Frodo\", \"lastName\":\"Baggins\"}")).andExpect(
-						status().isCreated()).andReturn();
+    MvcResult mvcResult = mockMvc.perform(post("/people").content(
+        "{\"firstName\": \"Frodo\", \"lastName\":\"Baggins\"}")).andExpect(
+            status().isCreated()).andReturn();
 
-		String location = requireNonNull(mvcResult.getResponse().getHeader("Location"));
+    String location = requireNonNull(mvcResult.getResponse().getHeader("Location"));
 
-		mockMvc.perform(put(location).content(
-				"{\"firstName\": \"Bilbo\", \"lastName\":\"Baggins\"}")).andExpect(
-						status().isNoContent());
+    mockMvc.perform(put(location).content(
+        "{\"firstName\": \"Bilbo\", \"lastName\":\"Baggins\"}")).andExpect(
+            status().isNoContent());
 
-		mockMvc.perform(get(location)).andExpect(status().isOk()).andExpect(
-				jsonPath("$.firstName").value("Bilbo")).andExpect(
-						jsonPath("$.lastName").value("Baggins"));
-	}
+    mockMvc.perform(get(location)).andExpect(status().isOk()).andExpect(
+        jsonPath("$.firstName").value("Bilbo")).andExpect(
+            jsonPath("$.lastName").value("Baggins"));
+  }
 
-	@Test
-	public void shouldPartiallyUpdateEntity() throws Exception {
+  @Test
+  public void shouldPartiallyUpdateEntity() throws Exception {
 
-		MvcResult mvcResult = mockMvc.perform(post("/people").content(
-				"{\"firstName\": \"Frodo\", \"lastName\":\"Baggins\"}")).andExpect(
-						status().isCreated()).andReturn();
+    MvcResult mvcResult = mockMvc.perform(post("/people").content(
+        "{\"firstName\": \"Frodo\", \"lastName\":\"Baggins\"}")).andExpect(
+            status().isCreated()).andReturn();
 
-		String location = requireNonNull(mvcResult.getResponse().getHeader("Location"));
+    String location = requireNonNull(mvcResult.getResponse().getHeader("Location"));
 
-		mockMvc.perform(
-				patch(location).content("{\"firstName\": \"Bilbo Jr.\"}")).andExpect(
-						status().isNoContent());
+    mockMvc.perform(
+        patch(location).content("{\"firstName\": \"Bilbo Jr.\"}")).andExpect(
+            status().isNoContent());
 
-		mockMvc.perform(get(location)).andExpect(status().isOk()).andExpect(
-				jsonPath("$.firstName").value("Bilbo Jr.")).andExpect(
-						jsonPath("$.lastName").value("Baggins"));
-	}
+    mockMvc.perform(get(location)).andExpect(status().isOk()).andExpect(
+        jsonPath("$.firstName").value("Bilbo Jr.")).andExpect(
+            jsonPath("$.lastName").value("Baggins"));
+  }
 
-	@Test
-	public void shouldDeleteEntity() throws Exception {
+  @Test
+  public void shouldDeleteEntity() throws Exception {
 
-		MvcResult mvcResult = mockMvc.perform(post("/people").content(
-				"{ \"firstName\": \"Bilbo\", \"lastName\":\"Baggins\"}")).andExpect(
-						status().isCreated()).andReturn();
+    MvcResult mvcResult = mockMvc.perform(post("/people").content(
+        "{ \"firstName\": \"Bilbo\", \"lastName\":\"Baggins\"}")).andExpect(
+            status().isCreated()).andReturn();
 
-		String location = requireNonNull(mvcResult.getResponse().getHeader("Location"));
-		mockMvc.perform(delete(location)).andExpect(status().isNoContent());
+    String location = requireNonNull(mvcResult.getResponse().getHeader("Location"));
+    mockMvc.perform(delete(location)).andExpect(status().isNoContent());
 
-		mockMvc.perform(get(location)).andExpect(status().isNotFound());
-	}
+    mockMvc.perform(get(location)).andExpect(status().isNotFound());
+  }
 }

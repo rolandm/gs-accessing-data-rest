@@ -8,10 +8,10 @@ import jakarta.persistence.Id
 @Entity
 class Person(
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    var id: Long? = null,
+  @Id
+  @GeneratedValue(strategy = GenerationType.AUTO)
+  var id: Long? = null,
 
-    var firstName: String? = null,
-    var lastName: String? = null
+  var firstName: String? = null,
+  var lastName: String? = null
 )
